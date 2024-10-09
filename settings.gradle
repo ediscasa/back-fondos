@@ -18,3 +18,7 @@ include ':api-rest'
 project(':api-rest').projectDir = file('./infrastructure/entry-points/api-rest')
 include ':dynamo-db'
 project(':dynamo-db').projectDir = file('./infrastructure/driven-adapters/dynamo-db')
+include ':notificacion-sns'
+project(':notificacion-sns').projectDir = file('./infrastructure/driven-adapters/notificacion-sns')
+include ':notificacion-ses'
+project(':notificacion-ses').projectDir = file('./infrastructure/driven-adapters/notificacion-ses')

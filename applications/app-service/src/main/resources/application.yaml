@@ -23,5 +23,10 @@ management:
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 aws:
+  region: "us-east-2"
+  accessKeyId: ""
+  secretAccessKey: ""
   dynamodb:
-    endpoint: "http://localhost:8000"
+    endpoint: "http://dynamodb.us-east-2.amazonaws.com"
+app:
+  saldoInicialCliente: 500000

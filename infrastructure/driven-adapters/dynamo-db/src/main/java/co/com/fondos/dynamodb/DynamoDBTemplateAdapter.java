@@ -1,6 +1,8 @@
 package co.com.fondos.dynamodb;
 
 import co.com.fondos.dynamodb.helper.TemplateAdapterOperations;
+import co.com.fondos.model.fondosclientes.FondosClientes;
+import co.com.fondos.model.fondosclientes.gateways.FondosClientesRepository;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -9,9 +11,10 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class DynamoDBTemplateAdapter extends TemplateAdapterOperations<Object /*domain model*/, String, ModelEntity /*adapter model*/> /* implements Gateway from domain */ {
+public class DynamoDBTemplateAdapter extends TemplateAdapterOperations<FondosClientes, String, FondosClientesEntity> implements FondosClientesRepository {
 
     public DynamoDBTemplateAdapter(DynamoDbEnhancedClient connectionFactory, ObjectMapper mapper) {
         /**
@@ -19,23 +22,40 @@ public class DynamoDBTemplateAdapter extends TemplateAdapterOperations<Object /*
          *  super(repository, mapper, d -> mapper.mapBuilder(d,ObjectModel.ObjectModelBuilder.class).build());
          *  Or using mapper.map with the class of the object model
          */
-        super(connectionFactory, mapper, d -> mapper.map(d, Object.class /*domain model*/), "table_name", "secondary_index" /*index is optional*/);
+        super(connectionFactory, mapper, d -> mapper.map(d, FondosClientes.class), "fondos_clientes");
     }
 
-    public List<Object /*domain model*/> getEntityBySomeKeys(String partitionKey, String sortKey) {
-        QueryEnhancedRequest queryExpression = generateQueryExpression(partitionKey, sortKey);
+    public List<FondosClientes> getEntityBeginsWith(String partitionKey, String sortKey) {
+        QueryEnhancedRequest queryExpression = generateQueryExpressionBeginsWith(partitionKey, sortKey);
         return query(queryExpression);
     }
 
-    public List<Object /*domain model*/> getEntityBySomeKeysByIndex(String partitionKey, String sortKey) {
-        QueryEnhancedRequest queryExpression = generateQueryExpression(partitionKey, sortKey);
-        return queryByIndex(queryExpression, "secondary_index" /*index is optional if you define in constructor*/);
-    }
-
-    private QueryEnhancedRequest generateQueryExpression(String partitionKey, String sortKey) {
+    private QueryEnhancedRequest generateQueryExpressionBeginsWith(String partitionKey, String sortKey) {
         return QueryEnhancedRequest.builder()
-                .queryConditional(QueryConditional.keyEqualTo(Key.builder().partitionValue(partitionKey).build()))
-                .queryConditional(QueryConditional.sortGreaterThanOrEqualTo(Key.builder().sortValue(sortKey).build()))
+                .queryConditional(QueryConditional.sortBeginsWith(Key.builder().partitionValue(partitionKey).sortValue(sortKey).build()))
                 .build();
     }
+
+    public Optional<FondosClientes> getLastEntityBeginsWith(String partitionKey, String sortKey) {
+        QueryEnhancedRequest queryExpression = generateQueryExpressionBeginsWith(partitionKey, sortKey).toBuilder()
+                .limit(1)
+                .scanIndexForward(false)
+                .build();
+        return query(queryExpression).stream().findFirst();
+    }
+
+    private QueryEnhancedRequest generateQueryExpressionEqualTo(String partitionKey, String sortKey) {
+        return QueryEnhancedRequest.builder()
+                .queryConditional(QueryConditional.keyEqualTo(Key.builder().partitionValue(partitionKey).sortValue(sortKey).build()))
+                .build();
+    }
+
+    public Optional<FondosClientes> getEntityByKeys(String partitionKey, String sortKey) {
+        QueryEnhancedRequest queryExpression = generateQueryExpressionEqualTo(partitionKey, sortKey).toBuilder()
+                .build();
+        return query(queryExpression).stream().findFirst();
+    }
+
+
+
 }

@@ -4,7 +4,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.regions.Region;
@@ -16,22 +18,15 @@ import java.net.URI;
 public class DynamoDBConfig {
 
     @Bean
-    @Profile({"local"})
     public DynamoDbClient amazonDynamoDBLocal(@Value("${aws.region}") String region,
-                                         @Value("${aws.dynamodb.endpoint}") String endpoint) {
+                                         @Value("${aws.dynamodb.endpoint}") String endpoint,
+                                              @Value("${aws.accessKeyId}") String accessKeyId,
+                                              @Value("${aws.secretAccessKey}") String secretAccessKey) {
         return DynamoDbClient.builder()
-                .credentialsProvider(ProfileCredentialsProvider.create("default"))
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(accessKeyId, secretAccessKey)))
                 .region(Region.of(region))
                 .endpointOverride(URI.create(endpoint))
-                .build();
-    }
-
-    @Bean
-    @Profile({"dev", "cer", "pdn"})
-    public DynamoDbClient amazonDynamoDB(@Value("${aws.region}") String region) {
-        return DynamoDbClient.builder()
-                .credentialsProvider(WebIdentityTokenFileCredentialsProvider.create())
-                .region(Region.of(region))
                 .build();
     }
 
