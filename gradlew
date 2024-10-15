@@ -223,7 +223,7 @@ then
     die "xargs is not available"
 fi
 
-# Use "xargs" to parse quoted args.
+# Use "xargs" to parse quoted args. 
 #
 # With -n1 it outputs one arg per line, with the quotes and backslashes removed.
 #
